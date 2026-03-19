@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RiskLog News</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--n0:#fff;--n50:#f8f9fa;--n100:#f1f3f5;--n200:#e9ecef;--n300:#dee2e6;--n400:#ced4da;--n500:#adb5bd;--n600:#868e96;--n700:#495057;--n800:#343a40;--n900:#212529;--blue:#2563eb;--blue-lt:#eff6ff;--blue-md:#bfdbfe;--sev-c:#dc2626;--sev-c-bg:#fef2f2;--sev-c-bd:#fecaca;--sev-h:#b45309;--sev-h-bg:#fffbeb;--sev-h-bd:#fde68a;--bg:var(--n50);--surface:var(--n0);--surface2:var(--n100);--t1:var(--n900);--t2:var(--n700);--t3:var(--n500);--t4:var(--n400);--bd:var(--n200);--bd2:var(--n300);--font:'Inter',-apple-system,sans-serif;--mono:'JetBrains Mono',monospace;--r:8px;--rl:12px;}
+[data-dark]{--n0:#0f1117;--n50:#13161e;--n100:#1a1f2a;--n200:#222736;--n300:#2d3348;--n400:#3d4560;--n500:#5a6380;--n600:#7b879f;--n700:#a0aabf;--n800:#c8d0df;--n900:#e8edf5;--blue:#3b82f6;--blue-lt:#1e2a45;--blue-md:#2d3f6a;--sev-c-bg:#2a1515;--sev-c-bd:#4a1f1f;--sev-h-bg:#271f0a;--sev-h-bd:#4a3510;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--t2);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+button{font-family:var(--font);cursor:pointer;}
+input{font-family:var(--font);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--n300);border-radius:99px;}
+.shell{display:grid;grid-template-columns:220px 1fr;grid-template-rows:48px 1fr;min-height:100vh;}
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:200;}
+.sidebar{background:var(--surface);border-right:1px solid var(--bd);padding:12px 10px;overflow-y:auto;position:sticky;top:48px;height:calc(100vh - 48px);}
+.main-area{overflow-y:auto;height:calc(100vh - 48px);}
+.main-content{padding:24px;max-width:1200px;}
+.logo{font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-0.01em;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.logo-icon{width:20px;height:20px;background:var(--blue);border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.logo-icon::after{content:'';width:8px;height:8px;border-radius:50%;background:white;}
+.search-box{flex:1;max-width:420px;position:relative;}
+.search-box input{width:100%;height:30px;padding:0 10px 0 30px;background:var(--n100);border:1px solid var(--bd);border-radius:var(--r);font-size:13px;color:var(--t1);transition:all .15s;}
+.search-box input:focus{outline:none;background:var(--surface);border-color:var(--blue);}
+.search-box input::placeholder{color:var(--t3);}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none;}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.tb-btn{height:30px;padding:0 10px;border-radius:var(--r);border:1px solid var(--bd);background:transparent;color:var(--t2);font-size:12px;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.tb-btn:hover{background:var(--n100);border-color:var(--bd2);color:var(--t1);}
+.tb-btn.accent{background:var(--blue);border-color:var(--blue);color:white;}
+.tb-btn.accent:hover{background:#1d4ed8;}
+.tb-btn:disabled{opacity:.45;cursor:not-allowed;}
+.spin{display:inline-block;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-pill{display:none;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:99px;padding:0 8px;height:22px;}
+.live-pill.on{display:flex;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#16a34a;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-group{margin-bottom:18px;}
+.nav-group-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);padding:0 6px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:6px;font-size:13px;color:var(--t2);cursor:pointer;transition:all .12s;user-select:none;}
+.nav-item:hover{background:var(--n100);color:var(--t1);}
+.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:500;}
+.nav-count{margin-left:auto;font-size:11px;font-family:var(--mono);color:var(--t3);background:var(--n100);padding:1px 6px;border-radius:99px;}
+.nav-item.active .nav-count{background:var(--blue-md);color:var(--blue);}
+.filter-group{margin-bottom:16px;}
+.filter-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:0 6px;margin-bottom:6px;}
+.filter-options{display:flex;flex-direction:column;gap:1px;}
+.filter-opt{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;font-size:12px;color:var(--t2);cursor:pointer;transition:all .12s;user-select:none;}
+.filter-opt:hover{background:var(--n100);color:var(--t1);}
+.filter-opt.on{color:var(--t1);font-weight:500;}
+.f-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--n400);transition:all .12s;}
+.filter-opt.on .f-dot{border-color:transparent;}
+.filter-opt[data-v="critical"].on .f-dot{background:var(--sev-c);}
+.filter-opt[data-v="high"].on .f-dot{background:var(--sev-h);}
+.filter-opt[data-v="medium"].on .f-dot,.filter-opt[data-v="all"].on .f-dot{background:var(--blue);}
+.filter-opt[data-v="low"].on .f-dot{background:var(--n400);}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.metric{background:var(--surface);border:1px solid var(--bd);border-radius:var(--rl);padding:14px 16px;}
+.metric-label{font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.metric-value{font-size:28px;font-weight:600;font-family:var(--mono);color:var(--t1);line-height:1;margin-bottom:4px;}
+.metric-sub{font-size:11px;color:var(--t3);}
+.metric-sub.up{color:var(--sev-c);}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:600;color:var(--t1);}
+.section-meta{font-size:12px;color:var(--t3);}
+.legend{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3);}
+.ld{width:8px;height:8px;border-radius:50%;}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;}
+.ncard{background:var(--surface);border:1px solid var(--bd);border-radius:var(--rl);padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;}
+.ncard:hover{border-color:var(--bd2);box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.ncard[data-sev="critical"]{border-left:2px solid var(--sev-c);}
+.ncard[data-sev="high"]{border-left:2px solid var(--sev-h);}
+.ncard[data-sev="medium"]{border-left:2px solid var(--n400);}
+.ncard[data-sev="low"]{border-left:2px solid var(--n300);}
+.ncard-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.ncard-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;letter-spacing:.02em;white-space:nowrap;}
+.bs-c{background:var(--sev-c-bg);color:var(--sev-c);border:1px solid var(--sev-c-bd);}
+.bs-h{background:var(--sev-h-bg);color:var(--sev-h);border:1px solid var(--sev-h-bd);}
+.bs-m{background:var(--n100);color:var(--n700);border:1px solid var(--bd);}
+.bs-l{background:var(--n100);color:var(--n500);border:1px solid var(--bd);}
+.bn{background:var(--n100);color:var(--t3);border:1px solid var(--bd);}
+.fav-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--t4);flex-shrink:0;font-size:13px;transition:color .12s;border:none;background:none;}
+.fav-btn:hover{color:var(--n600);}
+.fav-btn.on{color:#ca8a04;}
+.ncard-title{font-size:13px;font-weight:500;color:var(--t1);line-height:1.45;}
+.ncard-summary{font-size:12px;color:var(--t2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ncard-impact{display:flex;align-items:center;gap:8px;}
+.impact-track{flex:1;height:3px;background:var(--n200);border-radius:99px;overflow:hidden;}
+.impact-fill{height:100%;border-radius:99px;}
+.impact-label{font-size:10px;font-family:var(--mono);font-weight:500;color:var(--t3);white-space:nowrap;flex-shrink:0;}
+.ncard-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);}
+.msep{color:var(--n300);}
+.page{display:none;}
+.page.active{display:block;}
+.panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:300;backdrop-filter:blur(2px);}
+.panel-overlay.on{display:block;}
+.reading-panel{position:fixed;right:0;top:48px;bottom:0;width:540px;background:var(--surface);border-left:1px solid var(--bd);z-index:301;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+.reading-panel.open{transform:translateX(0);}
+.panel-inner{padding:24px;}
+.panel-close{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:var(--n100);color:var(--t2);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.panel-close:hover{background:var(--n200);}
+.panel-sev-bar{height:3px;border-radius:99px;margin-bottom:16px;}
+.panel-title{font-size:18px;font-weight:600;color:var(--t1);line-height:1.35;margin-bottom:10px;}
+.panel-meta-row{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--t3);margin-bottom:20px;}
+.panel-section{margin-bottom:20px;}
+.psl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;}
+.ai-block{background:var(--blue-lt);border:1px solid var(--blue-md);border-radius:var(--r);padding:12px 14px;font-size:13px;line-height:1.7;color:var(--t1);}
+.kp-list{display:flex;flex-direction:column;gap:6px;}
+.kp{font-size:13px;color:var(--t2);display:flex;gap:8px;}
+.kp::before{content:'→';color:var(--blue);flex-shrink:0;font-size:12px;margin-top:2px;}
+.ai-action{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:var(--n100);border:1px solid var(--bd);border-radius:var(--r);font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s;}
+.ai-action:hover{background:var(--n200);color:var(--t1);}
+.related-list{display:flex;flex-direction:column;gap:6px;}
+.related-item{padding:10px 12px;background:var(--n50);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:background .12s;}
+.related-item:hover{background:var(--n100);}
+.related-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:2px;}
+.related-meta{font-size:11px;color:var(--t3);}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.chart-card{background:var(--surface);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;}
+.chart-title{font-size:12px;font-weight:500;color:var(--t2);margin-bottom:14px;}
+.chart-wrap{height:180px;}
+.trend-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.trend-tag{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface);border:1px solid var(--bd);border-radius:99px;font-size:12px;color:var(--t2);cursor:pointer;transition:all .12s;}
+.trend-tag:hover{background:var(--n100);color:var(--t1);}
+.trend-count{font-size:11px;font-family:var(--mono);color:var(--blue);}
+.alert-form{background:var(--surface);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:16px;}
+.alert-form p{font-size:13px;color:var(--t3);margin-bottom:10px;}
+.alert-row{display:flex;gap:8px;}
+.alert-input{flex:1;height:34px;padding:0 12px;background:var(--n100);border:1px solid var(--bd);border-radius:var(--r);font-size:13px;color:var(--t1);transition:all .15s;}
+.alert-input:focus{outline:none;background:var(--surface);border-color:var(--blue);}
+.alert-input::placeholder{color:var(--t3);}
+.alert-items{display:flex;flex-direction:column;gap:6px;}
+.alert-item{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.alert-kw{font-size:13px;font-weight:500;color:var(--t1);}
+.alert-matches{margin-left:auto;font-size:11px;color:var(--t3);font-family:var(--mono);}
+.alert-del{width:24px;height:24px;border-radius:4px;border:none;background:transparent;color:var(--t4);font-size:13px;transition:color .12s;}
+.alert-del:hover{color:var(--sev-c);}
+.fetch-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.fetch-overlay.on{display:flex;}
+.fetch-box{background:var(--surface);border:1px solid var(--bd);border-radius:var(--rl);padding:28px 32px;text-align:center;width:300px;}
+.fetch-title{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:6px;}
+.fetch-sub{font-size:13px;color:var(--t3);margin-bottom:16px;}
+.fetch-bar{height:2px;background:var(--n200);border-radius:99px;overflow:hidden;}
+.fetch-fill{height:100%;background:var(--blue);border-radius:99px;animation:prog 2.2s ease-in-out infinite;}
+@keyframes prog{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--n900);color:var(--n0);border-radius:var(--r);padding:9px 14px;font-size:13px;opacity:0;transform:translateY(10px);transition:all .25s;z-index:999;pointer-events:none;max-width:280px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.empty{text-align:center;padding:48px 24px;color:var(--t3);grid-column:1/-1;}
+.empty-icon{font-size:32px;opacity:.4;margin-bottom:10px;}
+.empty p{font-size:14px;}
+@media(max-width:860px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.metrics{grid-template-columns:1fr 1fr;}.charts-grid{grid-template-columns:1fr;}.reading-panel{width:100%;}.news-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div class="logo"><div class="logo-icon"></div>RiskLog News</div>
+  <div class="search-box"><span class="search-icon">⌕</span><input id="searchInput" type="text" placeholder="Buscar noticias, países, tipos de riesgo..." oninput="onSearch()"></div>
+  <div class="top-actions">
+    <div class="live-pill" id="livePill"><div class="live-dot"></div>En vivo</div>
+    <button class="tb-btn accent" id="fetchBtn" onclick="fetchNews()"><span id="fetchIcon">↻</span> Actualizar</button>
+    <button class="tb-btn" onclick="goPage('alerts')">🔔 Alertas</button>
+    <button class="tb-btn" onclick="goPage('favorites')">★ Favoritos</button>
+    <button class="tb-btn" onclick="toggleTheme()">◐</button>
+  </div>
+</header>
+<aside class="sidebar">
+  <div class="nav-group">
+    <div class="nav-group-label">Vistas</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="goPage('dashboard')">⊞ Dashboard <span class="nav-count" id="cnt-all">72</span></div>
+    <div class="nav-item" id="nav-trends" onclick="goPage('trends')">↗ Tendencias</div>
+    <div class="nav-item" id="nav-favorites" onclick="goPage('favorites')">★ Favoritos <span class="nav-count" id="cnt-fav">0</span></div>
+    <div class="nav-item" id="nav-alerts" onclick="goPage('alerts')">🔔 Alertas <span class="nav-count" id="cnt-alerts">0</span></div>
+    <div class="nav-item" id="nav-latam" onclick="goPage('latam')">🌎 Latam</div>
+    <div class="nav-item" id="nav-europe" onclick="goPage('europe')">🇪🇺 Europa</div>
+    <div class="nav-item" id="nav-global" onclick="goPage('global')">🌍 Global</div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Criticidad</div>
+    <div class="filter-options">
+      <div class="filter-opt on" data-f="crit" data-v="all"><div class="f-dot"></div>Todas</div>
+      <div class="filter-opt" data-f="crit" data-v="critical"><div class="f-dot"></div>Crítico</div>
+      <div class="filter-opt" data-f="crit" data-v="high"><div class="f-dot"></div>Alto</div>
+      <div class="filter-opt" data-f="crit" data-v="medium"><div class="f-dot"></div>Medio</div>
+      <div class="filter-opt" data-f="crit" data-v="low"><div class="f-dot"></div>Bajo</div>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Tipo de riesgo</div>
+    <div class="filter-options">
+      <div class="filter-opt on" data-f="risk" data-v="all"><div class="f-dot"></div>Todos</div>
+      <div class="filter-opt" data-f="risk" data-v="robo"><div class="f-dot"></div>Robo</div>
+      <div class="filter-opt" data-f="risk" data-v="accidente"><div class="f-dot"></div>Accidente</div>
+      <div class="filter-opt" data-f="risk" data-v="climático"><div class="f-dot"></div>Climático</div>
+      <div class="filter-opt" data-f="risk" data-v="fraude"><div class="f-dot"></div>Fraude</div>
+      <div class="filter-opt" data-f="risk" data-v="regulatorio"><div class="f-dot"></div>Regulatorio</div>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Transporte</div>
+    <div class="filter-options">
+      <div class="filter-opt on" data-f="trans" data-v="all"><div class="f-dot"></div>Todos</div>
+      <div class="filter-opt" data-f="trans" data-v="marítimo"><div class="f-dot"></div>Marítimo</div>
+      <div class="filter-opt" data-f="trans" data-v="terrestre"><div class="f-dot"></div>Terrestre</div>
+      <div class="filter-opt" data-f="trans" data-v="aéreo"><div class="f-dot"></div>Aéreo</div>
+      <div class="filter-opt" data-f="trans" data-v="ferroviario"><div class="f-dot"></div>Ferroviario</div>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Región</div>
+    <div class="filter-options">
+      <div class="filter-opt on" data-f="country" data-v="all"><div class="f-dot"></div>Todas</div>
+      <div class="filter-opt" data-f="country" data-v="España"><div class="f-dot"></div>España</div>
+      <div class="filter-opt" data-f="country" data-v="México"><div class="f-dot"></div>México</div>
+      <div class="filter-opt" data-f="country" data-v="Brasil"><div class="f-dot"></div>Brasil</div>
+      <div class="filter-opt" data-f="country" data-v="Colombia"><div class="f-dot"></div>Colombia</div>
+      <div class="filter-opt" data-f="country" data-v="Global"><div class="f-dot"></div>Global</div>
+    </div>
+  </div>
+</aside>
+<main class="main-area">
+  <div class="main-content">
+    <div class="page active" id="page-dashboard">
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Noticias</div><div class="metric-value" id="m-total">72</div><div class="metric-sub up">↑ +8 vs ayer</div></div>
+        <div class="metric"><div class="metric-label">Críticas</div><div class="metric-value" id="m-crit">—</div><div class="metric-sub up">requieren atención</div></div>
+        <div class="metric"><div class="metric-label">Países</div><div class="metric-value" id="m-countries">—</div><div class="metric-sub">afectados</div></div>
+        <div class="metric"><div class="metric-label">Índice riesgo</div><div class="metric-value">7.2</div><div class="metric-sub up">↑ +0.4 esta semana</div></div>
+      </div>
+      <div class="legend">
+        <span style="font-size:11px;color:var(--t3);font-weight:500">Criticidad:</span>
+        <div class="legend-item"><div class="ld" style="background:var(--sev-c)"></div>Crítico</div>
+        <div class="legend-item"><div class="ld" style="background:var(--sev-h)"></div>Alto</div>
+        <div class="legend-item"><div class="ld" style="background:var(--n400)"></div>Medio</div>
+        <div class="legend-item"><div class="ld" style="background:var(--n300)"></div>Bajo</div>
+      </div>
+      <div class="section-head">
+        <div class="section-title">Noticias recientes</div>
+        <div class="section-meta" id="news-count"></div>
+      </div>
+      <div class="news-grid" id="newsGrid"></div>
+    </div>
+    <div class="page" id="page-trends">
+      <div class="section-head" style="margin-bottom:16px"><div class="section-title">Tendencias — últimos 30 días</div></div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Noticias por semana</div><div class="chart-wrap"><canvas id="cWeekly"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">Por tipo de riesgo</div><div class="chart-wrap"><canvas id="cRisk"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">Por región (críticas)</div><div class="chart-wrap"><canvas id="cCountry"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">Evolución criticidad</div><div class="chart-wrap"><canvas id="cCrit"></canvas></div></div>
+      </div>
+      <div class="section-head"><div class="section-title">Keywords en tendencia</div></div>
+      <div class="trend-tags" id="trendTags"></div>
+    </div>
+    <div class="page" id="page-favorites">
+      <div class="section-head"><div class="section-title">Favoritos guardados</div></div>
+      <div class="news-grid" id="favGrid"></div>
+      <div class="empty" id="favEmpty" style="display:none"><div class="empty-icon">★</div><p>Sin favoritos.<br>Haz clic en ☆ en cualquier noticia.</p></div>
+    </div>
+    <div class="page" id="page-alerts">
+      <div class="section-head"><div class="section-title">Alertas por keywords</div></div>
+      <div class="alert-wrap">
+        <div class="alert-form-box">
+          <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;">Recibe alertas cuando aparezcan noticias con estas palabras.</p>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input class="search-input" id="alertInput" type="text" placeholder="Ej: robo contenedor, España..." style="flex:1;height:32px;padding:0 10px;background:var(--n100);border:1px solid var(--bd);border-radius:4px;font-size:13px;color:var(--tx);">
+            <button onclick="addAlert()" style="height:32px;padding:0 14px;background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;">+ Añadir</button>
+          </div>
+        </div>
+        <div id="alertItems" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+    </div>
+    <div class="page" id="page-latam">
+      <div class="section-head" style="margin-bottom:20px">
+        <div class="section-title">🌎 Noticias — América Latina</div>
+        <div class="section-meta" id="latam-count"></div>
+      </div>
+      <div id="latamGrid"></div>
+      <div id="latamGrid"></div>
+    </div>
+    <div class="page" id="page-europe">
+      <div class="section-head" style="margin-bottom:20px">
+        <div class="section-title">🇪🇺 Noticias — Europa</div>
+        <div class="section-meta" id="europe-count"></div>
+      </div>
+      <div id="europeGrid"></div>
+      <div id="europeGrid"></div>
+    </div>
+    <div class="page" id="page-global">
+      <div class="section-head" style="margin-bottom:20px">
+        <div class="section-title">🌍 Noticias — Global</div>
+        <div class="section-meta" id="global-count"></div>
+      </div>
+      <div id="globalGrid"></div>
+      <div id="globalGrid"></div>
+    </div>
+      </div>
+      <div class="alert-items" id="alertItems"></div>
+    </div>
+  </div>
+</main>
+</div>
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="reading-panel" id="readingPanel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div class="panel-inner" id="panelInner"></div>
+</div>
+<div class="fetch-overlay" id="fetchOverlay">
+  <div class="fetch-box">
+    <div style="font-size:24px;margin-bottom:10px">🔍</div>
+    <div class="fetch-title">Buscando noticias</div>
+    <div class="fetch-sub" id="fetchMsg">Consultando fuentes globales...</div>
+    <div class="fetch-bar"><div class="fetch-fill"></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const NEWS=[
+{id:1,title:"Red de robo de camiones en corredor Madrid-Barcelona desmantela 12 bandas",summary:"Las autoridades españolas desarticularon una extensa red criminal que afectó a más de 200 cargas de alto valor en el último trimestre.",country:"España",risk:"robo",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-03-19",source:"El Confidencial",impact:97,tags:["robo","España","carretera"]},
+{id:2,title:"Robos en el puerto de Veracruz superan los $12M USD en pérdidas trimestrales",summary:"El Puerto de Veracruz reporta el peor trimestre con pérdidas millonarias en electrónica y productos farmacéuticos.",country:"México",risk:"robo",transport:"marítimo",sector:"farmacéutico",severity:"critical",date:"2026-03-18",source:"Milenio Logística",impact:94,tags:["robo","marítimo","México"]},
+{id:3,title:"Tormenta subtropical colapsa tres puertos del Mediterráneo durante 72 horas",summary:"Vientos de más de 90km/h paralizaron los puertos de Valencia, Génova y Marsella generando retrasos en cadenas de suministro europeas.",country:"España",risk:"climático",transport:"marítimo",sector:"shipping",severity:"high",date:"2026-03-19",source:"Lloyd's List",impact:81,tags:["clima","marítimo","Europa"]},
+{id:4,title:"Fraude documental masivo en importaciones de electrónica desde Asia",summary:"Europol detectó un esquema sistemático de falsificación de documentos de seguro y origen en cargamentos de dispositivos electrónicos.",country:"Global",risk:"fraude",transport:"marítimo",sector:"electrónica",severity:"high",date:"2026-03-18",source:"Trade Winds",impact:78,tags:["fraude","aduanas","Europa"]},
+{id:5,title:"Accidente en autopista Bogotá-Medellín destruye carga refrigerada por $2.3M",summary:"Un siniestro vial destruyó 14 camiones con carga refrigerada de alto valor entre las dos ciudades colombianas más importantes.",country:"Colombia",risk:"accidente",transport:"terrestre",sector:"alimentario",severity:"high",date:"2026-03-17",source:"Portafolio CO",impact:75,tags:["accidente","Colombia","refrigerada"]},
+{id:6,title:"Nueva regulación de la UE exige seguro obligatorio ampliado para transportes transfronterizos",summary:"La Directiva 2026/441 obliga a incrementar coberturas mínimas para operar en la Unión Europea desde julio.",country:"Global",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"medium",date:"2026-03-17",source:"EUR-Lex",impact:65,tags:["regulación","UE","seguro"]},
+{id:7,title:"Grupo delictivo roba carga aérea en 5 aeropuertos latinoamericanos coordinadamente",summary:"Investigaciones revelan células criminales coordinadas en aeropuertos de Lima, Bogotá, São Paulo, Ciudad de México y Buenos Aires.",country:"Brasil",risk:"robo",transport:"aéreo",sector:"logística",severity:"high",date:"2026-03-16",source:"Cargo Theft Network",impact:82,tags:["robo","aéreo","LATAM"]},
+{id:8,title:"Derrame de mercancías peligrosas en ferrocarril colapsa logística en noreste de España",summary:"Accidente ferroviario en Zaragoza-Barcelona provocó derrame de sustancias peligrosas activando protocolos de emergencia medioambiental.",country:"España",risk:"accidente",transport:"ferroviario",sector:"químico",severity:"medium",date:"2026-03-16",source:"Europa Press",impact:62,tags:["accidente","ferroviario","España"]},
+{id:9,title:"Aseguradoras elevan primas marítimas en +23% por piratería en Golfo de Adén",summary:"Las principales aseguradoras anunciaron incrementos para rutas que atraviesan el Cuerno de África ante el incremento de ataques piratas.",country:"Global",risk:"robo",transport:"marítimo",sector:"shipping",severity:"high",date:"2026-03-15",source:"Lloyd's Market",impact:79,tags:["piratería","marítimo","primas"]},
+{id:10,title:"EE.UU. registra récord histórico de robo de carga terrestre: $1.1B en pérdidas anuales",summary:"El FBI y la NICB revelaron pérdidas históricas por robo de carga terrestre, con California, Texas y Florida más afectados.",country:"EE.UU.",risk:"robo",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-03-15",source:"FBI Crime Report",impact:91,tags:["robo","terrestre","EE.UU."]},
+{id:11,title:"Siniestros de carga por olas de calor aumentan 45% en rutas del Mediterráneo",summary:"Datos de Allianz reflejan un aumento sin precedentes en siniestros por altas temperaturas que dañan cargas sensibles.",country:"España",risk:"climático",transport:"terrestre",sector:"alimentario",severity:"medium",date:"2026-03-14",source:"Allianz Trade",impact:61,tags:["clima","Mediterráneo","España"]},
+{id:12,title:"Colombia implementa rastreo satelital obligatorio para vehículos de carga",summary:"Decreto que exige GPS con transmisión en tiempo real para toda la flota de transporte de carga como medida anti-robo.",country:"Colombia",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"low",date:"2026-03-14",source:"MinTransporte CO",impact:42,tags:["regulación","GPS","Colombia"]},
+{id:13,title:"Incendio en almacén de São Paulo destruye mercancías por $8M sin cobertura total",summary:"Devastador incendio reveló graves deficiencias en las pólizas contratadas, con pérdidas no cubiertas superiores al 60%.",country:"Brasil",risk:"accidente",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-03-13",source:"Valor Econômico",impact:92,tags:["incendio","Brasil","seguro"]},
+{id:14,title:"Red criminal en Algeciras extrae mercancía de contenedores sin ruptura de precintos",summary:"Sofisticada operación burla los sistemas de control sin dejar rastro físico en los contenedores afectados.",country:"España",risk:"robo",transport:"marítimo",sector:"logística",severity:"critical",date:"2026-03-13",source:"La Razón",impact:95,tags:["robo","Algeciras","contenedor"]},
+{id:15,title:"Inundaciones en Bangladesh paralizan exportaciones textiles globales",summary:"Puertos y carreteras bloqueados generan retrasos de hasta 6 semanas en pedidos de grandes cadenas de moda europeas.",country:"Global",risk:"climático",transport:"marítimo",sector:"textil",severity:"high",date:"2026-03-12",source:"Reuters Logistics",impact:77,tags:["inundación","textil","suministro"]},
+{id:16,title:"Argentina endurece requisitos de seguro para importaciones tras escándalo de subfacturación",summary:"El Ministerio de Economía elevó los requisitos mínimos de cobertura para todas las importaciones superiores a $10.000 USD.",country:"Argentina",risk:"regulatorio",transport:"marítimo",sector:"regulatorio",severity:"medium",date:"2026-03-12",source:"Infobae",impact:58,tags:["regulación","Argentina","aduanas"]},
+{id:17,title:"Ataque ransomware a plataforma logística afecta 1.200 operadores en Europa y Asia",summary:"Ransomware comprometió TGS Logistics Platform bloqueando el acceso a documentación de seguros y trazabilidad durante 48 horas.",country:"Global",risk:"fraude",transport:"marítimo",sector:"tecnología",severity:"critical",date:"2026-03-11",source:"CyberLogistics Today",impact:93,tags:["ciberseguridad","ransomware","logística"]},
+{id:18,title:"Perú bate récord de asaltos a camiones en corredor minero: 34 incidentes en 30 días",summary:"Rutas de transporte minero experimentaron el mes más violento de la última década con pérdidas superiores a $15M.",country:"Perú",risk:"robo",transport:"terrestre",sector:"minería",severity:"critical",date:"2026-03-11",source:"El Comercio PE",impact:96,tags:["robo","minería","Perú"]},
+{id:19,title:"Canal de Panamá anuncia restricciones por sequía con impacto en pólizas de demora",summary:"Restricciones de calado reducirán el tráfico en un 30% durante 60 días, activando cláusulas de demora en miles de pólizas.",country:"Global",risk:"climático",transport:"marítimo",sector:"shipping",severity:"high",date:"2026-03-10",source:"Panama Canal Authority",impact:84,tags:["Canal Panamá","sequía","demora"]},
+{id:20,title:"Francia implementa escolta policial obligatoria para transporte de alto valor",summary:"El plan SECURTRANS obliga a transportes con valor superior a 500.000€ a utilizar escoltas de la Gendarmería en tramos de riesgo.",country:"Francia",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"medium",date:"2026-03-10",source:"Le Monde Transport",impact:55,tags:["Francia","escolta","regulación"]},
+{id:21,title:"Hundimiento en Mar del Norte: siniestro de $45M con 18 aseguradoras implicadas",summary:"El MV Nordvik se hundió con 2.400 contenedores en lo que se perfila como uno de los mayores siniestros marítimos del año.",country:"Global",risk:"accidente",transport:"marítimo",sector:"shipping",severity:"critical",date:"2026-03-09",source:"Lloyd's List",impact:98,tags:["hundimiento","marítimo","Noruega"]},
+{id:22,title:"Chile aprueba primera reforma integral de seguros de transporte en 40 años",summary:"La Ley 21.580 introduce coberturas obligatorias para riesgos cibernéticos, climáticos extremos y responsabilidad de operadores.",country:"Chile",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"low",date:"2026-03-09",source:"La Tercera",impact:38,tags:["Chile","ley","seguro"]},
+{id:23,title:"Interpol desmantela red que falsifica seguros de carga en 11 países",summary:"Operativo internacional desarticuló una red que emitía pólizas fraudulentas causando pérdidas a más de 400 empresas importadoras.",country:"Global",risk:"fraude",transport:"marítimo",sector:"seguros",severity:"critical",date:"2026-03-08",source:"Interpol Press",impact:90,tags:["fraude","seguro falso","Interpol"]},
+{id:24,title:"India supera a China en reclamaciones por daño en carga electrónica exportada",summary:"Munich Re posiciona a India como el país con mayor índice de reclamaciones por daños en tránsito de electrónica, superando por primera vez a China.",country:"Global",risk:"accidente",transport:"aéreo",sector:"electrónica",severity:"medium",date:"2026-03-08",source:"Munich Re Report",impact:67,tags:["India","electrónica","reclamaciones"]},
+{id:25,title:"Sequía en el Rin paraliza transporte fluvial de materias primas en Europa central",summary:"Niveles históricamente bajos obligan a suspender el tráfico de barcazas entre Rotterdam y los puertos interiores alemanes y suizos.",country:"Global",risk:"climático",transport:"marítimo",sector:"materias primas",severity:"high",date:"2026-03-07",source:"DW Wirtschaft",impact:80,tags:["clima","río Rin","Europa"]},
+{id:26,title:"Venezuela y Colombia incautan 23 camiones con mercancía de contrabando en frontera",summary:"Fuerzas de seguridad incautaron vehículos sin documentación de seguro ni declaración aduanera por valor de $4.2M.",country:"Colombia",risk:"fraude",transport:"terrestre",sector:"aduanas",severity:"medium",date:"2026-03-07",source:"El Tiempo CO",impact:59,tags:["contrabando","frontera","Colombia"]},
+{id:27,title:"Maersk desvía toda su flota por nuevos ataques hutíes en Mar Rojo",summary:"La naviera ordenó el desvío de su flota completa por el Cabo de Buena Esperanza tras seis nuevos ataques en una sola semana.",country:"Global",risk:"robo",transport:"marítimo",sector:"shipping",severity:"critical",date:"2026-03-06",source:"Shipping Watch",impact:95,tags:["Mar Rojo","Maersk","guerra"]},
+{id:28,title:"Empresa española demanda a aseguradora por $18M por denegación de siniestro",summary:"Ibertrans Logística demanda a Seguros Globales alegando denegación injustificada de un siniestro por inundación en el puerto de Barcelona.",country:"España",risk:"regulatorio",transport:"marítimo",sector:"seguros",severity:"medium",date:"2026-03-06",source:"Expansión",impact:63,tags:["demanda","siniestro","España"]},
+{id:29,title:"Ecuador: robos de carga bananera aumentan 180% en rutas de exportación",summary:"La Asociación de Exportadores alerta sobre un incremento alarmante de sustracciones en rutas desde plantaciones hasta puertos.",country:"Ecuador",risk:"robo",transport:"terrestre",sector:"alimentario",severity:"high",date:"2026-03-05",source:"El Universo EC",impact:74,tags:["robo","banano","Ecuador"]},
+{id:30,title:"Allianz eleva proyección de impagos logísticos en Europa al 8.3% para 2026",summary:"Informe advierte sobre el deterioro acelerado de la solvencia en empresas de transporte europeas de talla mediana.",country:"Global",risk:"regulatorio",transport:"terrestre",sector:"seguros",severity:"high",date:"2026-03-05",source:"Allianz Trade",impact:76,tags:["impagos","logística","Europa"]},
+{id:31,title:"Terremoto en Turquía daña el puerto de Iskenderun generando retrasos de semanas",summary:"Un sismo de magnitud 6.1 provocó daños estructurales en uno de los principales puntos de tránsito entre Europa y Asia Menor.",country:"Global",risk:"climático",transport:"marítimo",sector:"infraestructura",severity:"high",date:"2026-03-04",source:"Hellas Shipping",impact:83,tags:["terremoto","Turquía","puerto"]},
+{id:32,title:"México invierte $2.4B en seguridad de corredores de autotransporte de carga",summary:"El Plan Nacional de Seguridad Logística 2026-2030 instalará vigilancia y tecnología antiasalto en los 15 corredores más conflictivos.",country:"México",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"low",date:"2026-03-04",source:"SCT México",impact:44,tags:["México","seguridad","inversión"]},
+{id:33,title:"Fallo de temperatura destruye carga farmacéutica de $22M en vuelo transatlántico",summary:"Error en gestión de temperatura causó la inutilización de un cargamento completo de vacunas y medicamentos en vuelo Frankfurt-Chicago.",country:"EE.UU.",risk:"accidente",transport:"aéreo",sector:"farmacéutico",severity:"critical",date:"2026-03-03",source:"Air Cargo World",impact:93,tags:["farmacéutico","cadena frío","aéreo"]},
+{id:34,title:"340 contenedores desaparecidos en Durban: conspiración interna confirmada",summary:"Las autoridades sudafricanas concluyeron que empleados del puerto y crimen organizado internacional causaron la desaparición.",country:"Global",risk:"robo",transport:"marítimo",sector:"logística",severity:"critical",date:"2026-03-03",source:"Business Day ZA",impact:91,tags:["Sudáfrica","contenedor","corrupción"]},
+{id:35,title:"Japón exige embalaje ignífugo obligatorio para baterías de litio en buques",summary:"Nuevas directrices tras tres incendios graves en buques de carga en aguas japonesas durante 2025.",country:"Global",risk:"regulatorio",transport:"marítimo",sector:"electrónica",severity:"medium",date:"2026-03-02",source:"JCG Press",impact:60,tags:["Japón","baterías","incendio"]},
+{id:36,title:"Robo de obras de arte por $3M en Italia: sin cobertura de seguro por exclusión contractual",summary:"El traslado de obras maestras entre Roma y Milán resultó en robo que dejó al coleccionista sin indemnización por exclusión contractual.",country:"Italia",risk:"robo",transport:"terrestre",sector:"arte",severity:"high",date:"2026-03-02",source:"Il Sole 24 Ore",impact:77,tags:["robo","arte","Italia"]},
+{id:37,title:"Robos a camiones frigoríficos en Portugal interrumpen exportaciones de mariscos",summary:"Una veintena de robos en autopistas portuguesas interrumpió el flujo de exportaciones pesqueras hacia mercados del norte de Europa.",country:"Portugal",risk:"robo",transport:"terrestre",sector:"alimentario",severity:"high",date:"2026-03-01",source:"Jornal de Negócios",impact:76,tags:["robo","frigorífico","Portugal"]},
+{id:38,title:"Banda roba 14 camiones de electrodomésticos en autopistas del norte de Italia",summary:"Patrón sistemático de robos nocturnos en las autopistas A4 y A22 burla los sistemas de rastreo GPS.",country:"Italia",risk:"robo",transport:"terrestre",sector:"electrónica",severity:"critical",date:"2026-03-01",source:"Corriere della Sera",impact:90,tags:["robo","Italia","electrodomésticos"]},
+{id:39,title:"Huelga de transportistas en Francia bloquea fronteras con España y Bélgica 6 días",summary:"El paro generó colas de más de 80 km y pérdidas de carga perecedera de 120 millones de euros.",country:"Francia",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"high",date:"2026-02-28",source:"Le Figaro",impact:83,tags:["huelga","Francia","perecederos"]},
+{id:40,title:"Bolivia: 8 camiones cisterna con combustible desaparecen en ruta hacia Argentina",summary:"La Dirección de Inteligencia investiga la desaparición coordinada de vehículos con diésel industrial por $2.1M.",country:"Bolivia",risk:"robo",transport:"terrestre",sector:"energía",severity:"critical",date:"2026-02-28",source:"El Deber BO",impact:92,tags:["robo","cisterna","Bolivia"]},
+{id:41,title:"Alemania endurece inspecciones de camiones extranjeros por accidentes de mantenimiento",summary:"El 34% de los accidentes de carga en 2025 involucraron camiones con mantenimiento insuficiente provenientes del Este de Europa.",country:"Global",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"medium",date:"2026-02-27",source:"Handelsblatt",impact:57,tags:["Alemania","inspección","mantenimiento"]},
+{id:42,title:"Paraguay intercepta $6M en mercancía falsificada en puerto de Asunción",summary:"Aduanas e Interpol decomisaron 47 contenedores con productos de lujo falsificados sin cobertura de seguro declarada.",country:"Paraguay",risk:"fraude",transport:"marítimo",sector:"textil",severity:"high",date:"2026-02-27",source:"ABC Color PY",impact:73,tags:["falsificación","Paraguay","aduanas"]},
+{id:43,title:"Polonia registra récord ferroviario: 89 robos de carga en enero y febrero",summary:"PKP Cargo registró el bimestre más violento de su historia principalmente en tramos nocturnos hacia la frontera bielorrusa.",country:"Polonia",risk:"robo",transport:"ferroviario",sector:"logística",severity:"critical",date:"2026-02-26",source:"Rzeczpospolita",impact:94,tags:["robo","ferroviario","Polonia"]},
+{id:44,title:"Uruguay exige seguro de responsabilidad civil obligatorio para operadores logísticos",summary:"Nueva circular exige a operadores que facturen más de $1M contratar cobertura mínima de cinco millones de dólares.",country:"Uruguay",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"low",date:"2026-02-26",source:"El País UY",impact:41,tags:["Uruguay","regulación","responsabilidad"]},
+{id:45,title:"Incendio en Valencia destruye mercancía de 200 empresas sin seguro multirriesgo",summary:"Incendio de un almacén de 18.000 m² dejó pérdidas no cubiertas superiores a 25 millones de euros.",country:"España",risk:"accidente",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-02-25",source:"Levante EMV",impact:96,tags:["incendio","Valencia","sin seguro"]},
+{id:46,title:"Grecia detecta red de subfacturación en importaciones textiles a través del Pireo",summary:"Autoridad fiscal griega desarticuló operación de falsificación de valores que permitía contratar seguros con coberturas reducidas artificialmente.",country:"Global",risk:"fraude",transport:"marítimo",sector:"textil",severity:"high",date:"2026-02-25",source:"Kathimerini",impact:72,tags:["fraude","Grecia","Pireo"]},
+{id:47,title:"Tormenta Hildegard destruye 340 camiones en Países Bajos con rachas de 130 km/h",summary:"El mayor siniestro climático terrestre del año en Europa occidental generó pérdidas aseguradas superiores a 80 millones de euros.",country:"Global",risk:"climático",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-02-24",source:"NRC Handelsblad",impact:91,tags:["tormenta","Holanda","viento"]},
+{id:48,title:"Venezuela captura flota de drones usados para reconocimiento de robos de carga",summary:"Célula criminal utilizaba drones de largo alcance para identificar y seguir camiones de alto valor antes de interceptarlos.",country:"Venezuela",risk:"robo",transport:"terrestre",sector:"logística",severity:"high",date:"2026-02-24",source:"El Nacional VE",impact:79,tags:["drones","Venezuela","tecnología"]},
+{id:49,title:"Bélgica alerta sobre certificados de seguro de carga falsos en plataformas digitales",summary:"La FSMA emitió alerta sobre certificados de transporte falsificados ofrecidos en plataformas logísticas online.",country:"Global",risk:"fraude",transport:"terrestre",sector:"seguros",severity:"high",date:"2026-02-23",source:"De Tijd",impact:75,tags:["fraude","Bélgica","digital"]},
+{id:50,title:"Brasil inaugura corredor logístico seguro São Paulo-Santos con escolta certificada",summary:"Primera ruta de transporte de alto valor con escolta privada certificada entre el mayor complejo industrial y el mayor puerto de Brasil.",country:"Brasil",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"low",date:"2026-02-23",source:"Valor Logístico",impact:40,tags:["Brasil","escolta","Santos"]},
+{id:51,title:"Chequia y Eslovaquia activan patrullas conjuntas por aumento del 60% en robos",summary:"Acuerdo de cooperación policial para combatir robos en autopistas compartidas de mercancías procedentes de Austria y Alemania.",country:"Global",risk:"robo",transport:"terrestre",sector:"logística",severity:"high",date:"2026-02-22",source:"Czech News Agency",impact:71,tags:["Chequia","Eslovaquia","patrullas"]},
+{id:52,title:"Chile: primer robo de litio en tránsito por $9M en ruta minera del norte",summary:"Carbonato de litio de alta pureza fue sustraído en la ruta del Salar de Atacama al puerto de Antofagasta.",country:"Chile",risk:"robo",transport:"terrestre",sector:"minería",severity:"critical",date:"2026-02-22",source:"La Tercera",impact:95,tags:["litio","Chile","minería"]},
+{id:53,title:"Gripe aviar en Europa obliga a destruir cargamentos avícolas por 180M de euros",summary:"Brote en doce países europeos forzó la destrucción de toneladas de productos avícolas en tránsito activando reclamaciones masivas.",country:"Global",risk:"climático",transport:"terrestre",sector:"alimentario",severity:"critical",date:"2026-02-21",source:"Euronews Health",impact:93,tags:["gripe aviar","Europa","alimentario"]},
+{id:54,title:"Ecuador implementa blockchain para trazabilidad de seguros de exportación bananera",summary:"Plataforma piloto permite verificar en tiempo real la autenticidad de pólizas de seguro de exportación de banano.",country:"Ecuador",risk:"regulatorio",transport:"marítimo",sector:"alimentario",severity:"low",date:"2026-02-21",source:"El Comercio EC",impact:36,tags:["blockchain","Ecuador","trazabilidad"]},
+{id:55,title:"Rumanía: epicentro europeo del robo de cobre en tránsito según Europol",summary:"Red de chatarrerías blanquea metal procedente de robos en toda la región y lo reexporta hacia mercados asiáticos.",country:"Global",risk:"robo",transport:"terrestre",sector:"materias primas",severity:"critical",date:"2026-02-20",source:"Europol Press",impact:89,tags:["cobre","Rumanía","Europol"]},
+{id:56,title:"Argentina suspende licencias de tres transportistas por operar sin seguro vigente",summary:"La CNRT sancionó a tres empresas con suspensión inmediata al verificar operaciones con pólizas vencidas en rutas internacionales.",country:"Argentina",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"medium",date:"2026-02-20",source:"Infotransporte AR",impact:54,tags:["Argentina","licencias","sanción"]},
+{id:57,title:"Suecia investiga desaparición de medicamentos oncológicos por $14M",summary:"Investigación de máxima prioridad tras la desaparición de medicamentos para el cáncer durante traslado desde el aeropuerto de Arlanda.",country:"Global",risk:"robo",transport:"terrestre",sector:"farmacéutico",severity:"critical",date:"2026-02-19",source:"SVT Nyheter",impact:97,tags:["Suecia","farmacéutico","oncológico"]},
+{id:58,title:"Perú y Bolivia firman acuerdo para combatir robo en corredor interoceánico",summary:"Convenio que establece protocolos unificados de escolta y sistemas de alerta temprana en el corredor Pacífico-Bolivia.",country:"Perú",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"low",date:"2026-02-19",source:"Andina PE",impact:39,tags:["Perú","Bolivia","acuerdo"]},
+{id:59,title:"Naufragio en el Adriático: 1.200 toneladas de maquinaria desaparecen con el MV Adriatic Star",summary:"El ferry carguero naufragó con maquinaria agrícola e industrial por 38 millones de euros entre Ancona y Durrës.",country:"Italia",risk:"accidente",transport:"marítimo",sector:"maquinaria",severity:"critical",date:"2026-02-18",source:"ANSA Italia",impact:99,tags:["naufragio","Adriático","maquinaria"]},
+{id:60,title:"España lidera Europa en siniestralidad de carga por distracción del conductor",summary:"CESCE sitúa a España como el país con mayor índice de siniestros atribuibles a distracción, con coste anual de 890M de euros.",country:"España",risk:"accidente",transport:"terrestre",sector:"logística",severity:"high",date:"2026-02-18",source:"CESCE Informe",impact:74,tags:["España","distracción","siniestralidad"]},
+{id:61,title:"Red clona GPS de camiones para sustraer carga sin activar alertas de seguridad",summary:"Guardia Civil y Europol desarticularon una banda con tecnología para clonar señales GPS de camiones de alto valor.",country:"España",risk:"robo",transport:"terrestre",sector:"tecnología",severity:"critical",date:"2026-02-17",source:"ABC España",impact:96,tags:["GPS","clonación","Guardia Civil"]},
+{id:62,title:"Guatemala: 23 secuestros de conductores de carga en primer bimestre de 2026",summary:"La Cámara de Transporte alerta sobre el incremento de secuestros de camioneros con exigencias de rescate en las principales rutas.",country:"Guatemala",risk:"robo",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-02-17",source:"Prensa Libre GT",impact:93,tags:["secuestro","Guatemala","conductor"]},
+{id:63,title:"Países Bajos aprueba ley de responsabilidad extendida para plataformas de carga digital",summary:"Nueva ley responsabiliza a plataformas de intermediación logística de los siniestros cuando el seguro del transportista resulta insuficiente.",country:"Global",risk:"regulatorio",transport:"terrestre",sector:"regulatorio",severity:"medium",date:"2026-02-16",source:"NRC Handelsblad",impact:62,tags:["Holanda","ley","plataformas"]},
+{id:64,title:"Incendio destruye 3.800 contenedores en portacontenedores frente a las Azores",summary:"El MV Pacific Sunrise sufrió un incendio de 18 horas generando un siniestro estimado en 280 millones de dólares.",country:"Global",risk:"accidente",transport:"marítimo",sector:"shipping",severity:"critical",date:"2026-02-16",source:"Lloyd's List",impact:98,tags:["incendio","contenedor","Azores"]},
+{id:65,title:"Costa Rica fortalece controles aduaneros ante importaciones con seguros subdeclarados",summary:"Decreto que establece verificación cruzada obligatoria entre valor declarado en aduana y valor asegurado de mercancías.",country:"Costa Rica",risk:"regulatorio",transport:"marítimo",sector:"aduanas",severity:"low",date:"2026-02-15",source:"La Nación CR",impact:43,tags:["Costa Rica","aduana","subdeclaración"]},
+{id:66,title:"Turquía: corredor de $2.4B en mercancías robadas entre Europa y Oriente Medio",summary:"Informe de Interpol y la Agencia Tributaria turca revela el papel central del país en el tráfico de mercancías ilegales euroasiáticas.",country:"Global",risk:"robo",transport:"terrestre",sector:"logística",severity:"critical",date:"2026-02-15",source:"Interpol Annual",impact:92,tags:["Turquía","tránsito","Interpol"]},
+{id:67,title:"Alemania impone multas récord a aseguradoras por dilación en pago de siniestros",summary:"BaFin impuso multas de hasta 12 millones de euros por retrasos sistemáticos superiores a 180 días en liquidación de siniestros de carga.",country:"Global",risk:"regulatorio",transport:"terrestre",sector:"seguros",severity:"high",date:"2026-02-14",source:"BaFin Press",impact:76,tags:["Alemania","multa","aseguradora"]},
+{id:68,title:"Bolivia: robo de vacunas pediátricas desabastece 300 comunidades rurales",summary:"Sustracción de vacunas infantiles por $8.3M del depósito central del Ministerio de Salud expuso graves deficiencias en seguridad logística sanitaria.",country:"Bolivia",risk:"robo",transport:"terrestre",sector:"farmacéutico",severity:"critical",date:"2026-02-14",source:"Los Tiempos BO",impact:98,tags:["robo","vacunas","Bolivia"]},
+{id:69,title:"España y Portugal acuerdan patrullas ibéricas conjuntas en autovía A-66",summary:"Protocolo de Seguridad Logística Ibérica establece patrullas combinadas de Guardia Civil y GNR portuguesa en 480 km de autovía.",country:"España",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"medium",date:"2026-02-13",source:"El País",impact:58,tags:["España","Portugal","patrullas"]},
+{id:70,title:"Inundaciones en Brasil destruyen 1.200 camiones y colapsan corredores de soja",summary:"Pérdidas en la flota de transporte superiores a 400 millones de reales paralizaron los corredores de exportación hacia los puertos.",country:"Brasil",risk:"climático",transport:"terrestre",sector:"alimentario",severity:"critical",date:"2026-02-13",source:"Folha de S.Paulo",impact:95,tags:["inundación","Brasil","soja"]},
+{id:71,title:"Fraude masivo en seguros frigoríficos afecta a 340 empresas alimentarias europeas",summary:"Red con sede en Chipre emitía pólizas fraudulentas de seguro refrigerado a empresas de doce países europeos sin capacidad real de cobertura.",country:"Global",risk:"fraude",transport:"terrestre",sector:"alimentario",severity:"critical",date:"2026-02-12",source:"Europol Press",impact:94,tags:["fraude","frigorífico","Chipre"]},
+{id:72,title:"México y Guatemala lanzan corredor logístico seguro con verificación biométrica",summary:"Primer corredor transfronterizo con biométrica de conductores reduce los tiempos de espera de 8 horas a 45 minutos en Ciudad Hidalgo.",country:"México",risk:"regulatorio",transport:"terrestre",sector:"logística",severity:"low",date:"2026-02-12",source:"SCT México",impact:37,tags:["México","Guatemala","biométrico"]},
+];
+const S={favs:JSON.parse(localStorage.getItem('rl2_favs')||'[]'),alerts:JSON.parse(localStorage.getItem('rl2_alerts')||'["robo contenedor","piratería","Mar Rojo"]'),filters:{crit:'all',risk:'all',trans:'all',country:'all'},search:'',page:'dashboard',dark:localStorage.getItem('rl2_dark')==='1'};
+var SEV={critical:{label:'Crítico',badge:'bs-c',color:'var(--sev-c)'},high:{label:'Alto',badge:'bs-h',color:'var(--sev-h)'},medium:{label:'Medio',badge:'bs-m',color:'var(--n400)'},low:{label:'Bajo',badge:'bs-l',color:'var(--n300)'}};
+(function init(){if(S.dark)document.body.setAttribute('data-dark','');setupFilters();renderGrid();renderAlerts();updateCounts();})();
+function setupFilters(){document.querySelectorAll('.filter-opt').forEach(el=>{el.addEventListener('click',()=>{const f=el.dataset.f,v=el.dataset.v;document.querySelectorAll(`.filter-opt[data-f="${f}"]`).forEach(x=>x.classList.remove('on'));el.classList.add('on');S.filters[f]=v;renderGrid();});});}
+function filtered(){return NEWS.filter(n=>{if(S.search){const q=S.search.toLowerCase();if(!n.title.toLowerCase().includes(q)&&!n.summary.toLowerCase().includes(q)&&!n.country.toLowerCase().includes(q)&&!n.tags.some(t=>t.toLowerCase().includes(q)))return false;}if(S.filters.crit!=='all'&&n.severity!==S.filters.crit)return false;if(S.filters.risk!=='all'&&n.risk!==S.filters.risk)return false;if(S.filters.trans!=='all'&&n.transport!==S.filters.trans)return false;if(S.filters.country!=='all'&&n.country!==S.filters.country)return false;return true;});}
+function onSearch(){S.search=document.getElementById('searchInput').value;renderGrid();}
+
+function ic(v){return v>=90?'var(--sev-c)':v>=75?'var(--sev-h)':v>=50?'var(--n500)':'var(--n300)';}
+function cardHTML(n){const s=SEV[n.severity]||SEV.low;const isFav=S.favs.includes(n.id);return`<div class="ncard" data-sev="${n.severity}" onclick="openPanel(${n.id})"><div class="ncard-head"><div class="ncard-badges"><span class="badge ${s.badge}">${s.label}</span><span class="badge bn">${n.country}</span><span class="badge bn">${n.transport}</span></div><button class="fav-btn ${isFav?'on':''}" onclick="toggleFav(event,${n.id})">${isFav?'★':'☆'}</button></div><div class="ncard-title">${n.title}</div><div class="ncard-summary">${n.summary}</div><div class="ncard-impact"><div class="impact-track"><div class="impact-fill" style="width:${n.impact}%;background:${ic(n.impact)}"></div></div><div class="impact-label">Impacto ${n.impact}/100</div></div><div class="ncard-meta"><span>${n.source}</span><span class="msep">·</span><span>${n.date}</span><span class="msep">·</span><span>${n.risk}</span></div></div>`;}
+function renderGrid(){const list=filtered();const g=document.getElementById('newsGrid');g.innerHTML=list.length?list.map(cardHTML).join(''):'<div class="empty"><div class="empty-icon">🔍</div><p>Sin resultados con los filtros actuales.</p></div>';document.getElementById('news-count').textContent=`${list.length} noticias`;document.getElementById('m-crit').textContent=NEWS.filter(n=>n.severity==='critical').length;document.getElementById('m-total').textContent=NEWS.length;document.getElementById('m-countries').textContent=[...new Set(NEWS.map(n=>n.country))].length;}
+function renderFavs(){const list=NEWS.filter(n=>S.favs.includes(n.id));const g=document.getElementById('favGrid');const e=document.getElementById('favEmpty');if(!list.length){g.innerHTML='';e.style.display='block';}else{g.innerHTML=list.map(cardHTML).join('');e.style.display='none';}}
+function updateCounts(){document.getElementById('cnt-all').textContent=NEWS.length;document.getElementById('cnt-fav').textContent=S.favs.length;document.getElementById('cnt-alerts').textContent=S.alerts.length;}
+function toggleFav(e,id){e.stopPropagation();const i=S.favs.indexOf(id);if(i>-1)S.favs.splice(i,1);else S.favs.push(id);localStorage.setItem('rl2_favs',JSON.stringify(S.favs));renderGrid();if(S.page==='favorites')renderFavs();updateCounts();toast(i>-1?'Eliminado de favoritos':'Guardado ★');}
+function openPanel(id){const n=NEWS.find(x=>x.id===id);if(!n)return;const s=SEV[n.severity]||SEV.low;const related=NEWS.filter(x=>x.id!==id&&(x.risk===n.risk||x.country===n.country)).slice(0,3);const isFav=S.favs.includes(n.id);document.getElementById('panelInner').innerHTML=`<div class="panel-sev-bar" style="background:${s.color}"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"><span class="badge ${s.badge}">${s.label}</span><span class="badge bn">${n.country}</span><span class="badge bn">${n.transport}</span><span class="badge bn">${n.risk}</span></div><div class="panel-title">${n.title}</div><div class="panel-meta-row"><span>📰 ${n.source}</span><span>📅 ${n.date}</span><span>🏭 ${n.sector}</span><span>⚡ Impacto ${n.impact}/100</span></div><div class="panel-section"><div class="psl">Descripción</div><p style="font-size:14px;line-height:1.75;color:var(--t2)">${n.summary}</p></div><div class="panel-section"><div class="psl">Resumen con IA</div><button class="ai-action" id="aibtn-${n.id}" onclick="getAI(${n.id})">✦ Analizar con Claude</button><div id="aiout-${n.id}" style="margin-top:10px"></div></div><div class="panel-section"><div class="psl">Puntos clave</div><div class="kp-list"><div class="kp">Criticidad <strong>${s.label}</strong> — impacto ${n.impact}/100</div><div class="kp">Transporte: <strong>${n.transport}</strong></div><div class="kp">Tipo de riesgo: <strong>${n.risk}</strong></div><div class="kp">Sector: <strong>${n.sector}</strong></div><div class="kp">País: <strong>${n.country}</strong></div></div></div>${related.length?`<div class="panel-section"><div class="psl">Relacionadas</div><div class="related-list">${related.map(r=>`<div class="related-item" onclick="openPanel(${r.id})"><div class="related-title">${r.title}</div><div class="related-meta">${r.country} · ${r.risk} · ${r.date}</div></div>`).join('')}</div></div>`:''}<div style="margin-top:16px"><button class="tb-btn accent" style="width:100%" onclick="toggleFav(event,${n.id})">${isFav?'★ En favoritos':'☆ Guardar'}</button></div>`;document.getElementById('readingPanel').classList.add('open');document.getElementById('panelOverlay').classList.add('on');}
+function closePanel(){document.getElementById('readingPanel').classList.remove('open');document.getElementById('panelOverlay').classList.remove('on');}
+async function getAI(id){const n=NEWS.find(x=>x.id===id);const btn=document.getElementById(`aibtn-${id}`);const out=document.getElementById(`aiout-${id}`);btn.style.display='none';out.innerHTML='<div style="font-size:12px;color:var(--t3);padding:8px 0">Analizando con Claude...</div>';try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:'Eres analista senior de seguros de transporte. Responde en español, conciso, lenguaje ejecutivo.',messages:[{role:'user',content:`Analiza en 3 puntos:\n1. Resumen ejecutivo (2 frases)\n2. Implicación para aseguradoras\n3. Recomendación de acción\n\nNoticia: "${n.title}"\nDetalle: "${n.summary}"\nPaís: ${n.country} | Riesgo: ${n.risk} | Impacto: ${n.impact}/100`}]})});if(!res.ok)throw new Error('API error');const data=await res.json();const txt=data.content.find(b=>b.type==='text')?.text||'';out.innerHTML=`<div class="ai-block">${txt.replace(/\n/g,'<br>')}</div>`;}catch(err){out.innerHTML=`<div class="ai-block" style="border-color:var(--sev-c-bd);color:var(--sev-c)">Error al conectar con IA.</div>`;btn.style.display='inline-flex';}}
+function addAlert(){const i=document.getElementById('alertInput');const kw=i.value.trim();if(!kw||S.alerts.includes(kw))return;S.alerts.push(kw);localStorage.setItem('rl2_alerts',JSON.stringify(S.alerts));i.value='';renderAlerts();updateCounts();toast('Alerta añadida: '+kw);}
+function removeAlert(kw){S.alerts=S.alerts.filter(a=>a!==kw);localStorage.setItem('rl2_alerts',JSON.stringify(S.alerts));renderAlerts();updateCounts();}
+function renderAlerts(){
+  var el=document.getElementById('alertItems');
+  if(!el) return;
+  if(!S.alerts.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🔔</div><p>Sin alertas configuradas.</p></div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<S.alerts.length;i++){
+    var kw=S.alerts[i];
+    var m=NEWS.filter(function(n){ return (n.title+n.summary+(n.tags||[]).join(' ')).toLowerCase().indexOf(kw.toLowerCase())>-1; }).length;
+    html+='<div class="alert-item" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:6px;">';
+    html+='<div style="width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;"></div>';
+    html+='<span style="font-size:13px;font-weight:500;color:var(--tx);">'+kw+'</span>';
+    html+='<span style="margin-left:auto;font-size:11px;color:var(--tx3);">'+m+' coincidencias</span>';
+    html+='<button onclick="removeAlert('+i+')" style="width:22px;height:22px;border:none;background:transparent;color:var(--tx3);font-size:13px;cursor:pointer;">✕</button>';
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+let chartsReady=false;
+function renderTrends(){if(chartsReady)return;chartsReady=true;const gc='rgba(128,128,128,0.07)';const tc=S.dark?'rgba(160,170,191,.5)':'rgba(73,80,87,.5)';const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10}}}}};new Chart(document.getElementById('cWeekly'),{type:'bar',data:{labels:['Sem 1','Sem 2','Sem 3','Sem 4'],datasets:[{data:[18,22,20,28],backgroundColor:['#bfdbfe','#bfdbfe','#bfdbfe','#2563eb'],borderRadius:4,borderSkipped:false}]},options:{...base}});new Chart(document.getElementById('cRisk'),{type:'doughnut',data:{labels:['Robo','Climático','Accidente','Fraude','Regulatorio'],datasets:[{data:[40,18,20,12,10],backgroundColor:['#dc2626','#2563eb','#b45309','#6b7280','#9ca3af'],borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:tc,font:{size:10},boxWidth:10,padding:8}}}}});new Chart(document.getElementById('cCountry'),{type:'bar',data:{labels:['España','México','Global','Brasil','EE.UU.','Colombia'],datasets:[{data:[8,6,12,5,4,3],backgroundColor:'#dc2626',borderRadius:4,borderSkipped:false}]},options:{...base,indexAxis:'y'}});new Chart(document.getElementById('cCrit'),{type:'line',data:{labels:['L','M','X','J','V','S','D'],datasets:[{label:'Crítica',data:[2,3,1,4,2,3,4],borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.08)',fill:true,tension:.4,borderWidth:1.5,pointRadius:2},{label:'Alta',data:[4,5,6,5,7,6,5],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.05)',fill:true,tension:.4,borderWidth:1.5,pointRadius:2}]},options:{...base,plugins:{legend:{display:true,labels:{color:tc,font:{size:10},boxWidth:10,padding:8}}}}});const kws=[{k:'robo contenedor',n:14},{k:'marítimo España',n:11},{k:'seguro carga',n:9},{k:'piratería',n:8},{k:'regulación UE',n:7},{k:'fraude aduanas',n:6},{k:'cadena frío',n:5},{k:'GPS tracking',n:4}];document.getElementById('trendTags').innerHTML=kws.map(({k,n})=>`<div class="trend-tag" onclick="searchKw('${k}')">${k}<span class="trend-count">${n}</span></div>`).join('');}
+function searchKw(kw){document.getElementById('searchInput').value=kw;S.search=kw;goPage('dashboard');renderGrid();}
+function goPage(page){
+  S.page=page;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+page);
+  if(pg) pg.classList.add('active');
+  var ni=document.getElementById('nav-'+page);
+  if(ni) ni.classList.add('active');
+  if(page==='favorites') renderFavs();
+  if(page==='trends') renderTrends();
+  if(page==='latam'||page==='europe'||page==='global') renderRegion(page);
+}
+
+var LATAM_C=['Mexico','México','Colombia','Brasil','Chile','Argentina','Peru','Perú','Bolivia','Ecuador','Uruguay','Paraguay','Guatemala','Venezuela','Costa Rica'];
+var EUROPE_C=['España','Italia','Francia','Alemania','Portugal','Polonia','Bélgica','Holanda','Países Bajos','Grecia','Rumanía','Chequia','Eslovaquia','Suecia','Austria','Suiza','Turquía','Reino Unido'];
+
+function inLatam(c){ return LATAM_C.indexOf(c)>-1; }
+function inEurope(c){ return EUROPE_C.indexOf(c)>-1; }
+
+function renderRegion(region){
+  var el=document.getElementById(region+'Grid');
+  var countEl=document.getElementById(region+'-count');
+  if(!el) return;
+  var items;
+  if(region==='latam'){
+    items=NEWS.filter(function(n){ return inLatam(n.country); });
+  } else if(region==='europe'){
+    items=NEWS.filter(function(n){ return inEurope(n.country); });
+  } else {
+    items=NEWS.filter(function(n){ return !inLatam(n.country)&&!inEurope(n.country); });
+  }
+  if(countEl) countEl.textContent=items.length+' noticias';
+  if(!items.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📰</div><p>Sin noticias para esta region.</p></div>';
+    return;
+  }
+  var byCountry={};
+  items.forEach(function(n){
+    if(!byCountry[n.country]) byCountry[n.country]=[];
+    byCountry[n.country].push(n);
+  });
+  var countries=Object.keys(byCountry).sort(function(a,b){ return byCountry[b].length-byCountry[a].length; });
+  var html='';
+  countries.forEach(function(country){
+    var news=byCountry[country];
+    var critCount=news.filter(function(n){return n.severity==='critical';}).length;
+    var critBadge=critCount>0?(' <span style="font-size:10px;background:var(--sev-c-bg,#fef2f2);color:#dc2626;border:1px solid #fecaca;padding:1px 6px;border-radius:3px;font-weight:600;">'+critCount+' critico'+(critCount>1?'s':'')+'</span>'):'';
+    html+='<div style="margin-bottom:28px;">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--bd);">';
+    html+='<span style="font-size:14px;font-weight:600;color:var(--tx);">'+country+'</span>';
+    html+=critBadge;
+    html+='<span style="font-size:11px;color:var(--tx3);margin-left:auto;">'+news.length+' noticia'+(news.length>1?'s':'')+'</span>';
+    html+='</div>';
+    html+='<div class="news-grid">';
+    news.forEach(function(n){ html+=cardHTML(n); });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+var LATAM=['Mexico','Colombia','Brasil','Chile','Argentina','Peru','Bolivia','Ecuador','Uruguay','Paraguay','Guatemala','Venezuela','Costa Rica','Mexico'];
+var EUROPE=['España','Italia','Francia','Alemania','Portugal','Polonia','Belgica','Holanda','Grecia','Rumania','Chequia','Eslovaquia','Suecia','Austria','Suiza','Turquia','Reino Unido'];
+
+function renderRegion(region){
+  var el=document.getElementById(region+'Grid');
+  var countEl=document.getElementById(region+'-count');
+  if(!el) return;
+
+  var items;
+  if(region==='global'){
+    items=NEWS.filter(function(n){ return n.country==='Global' || (LATAM.indexOf(n.country)===-1 && EUROPE.indexOf(n.country)===-1 && n.country!=='España' && n.country!=='Global'); });
+    // for global, just show all that don't fit latam or europe
+    items=NEWS.filter(function(n){
+      var isLatam=LATAM.indexOf(n.country)>-1;
+      var isEurope=EUROPE.indexOf(n.country)>-1 || n.country==='España' || n.country==='Italia' || n.country==='Francia' || n.country==='Alemania' || n.country==='Portugal' || n.country==='Polonia' || n.country==='Holanda' || n.country==='Grecia' || n.country==='Suecia';
+      return !isLatam && !isEurope;
+    });
+  } else if(region==='latam'){
+    items=NEWS.filter(function(n){
+      return ['Mexico','México','Colombia','Brasil','Chile','Argentina','Peru','Perú','Bolivia','Ecuador','Uruguay','Paraguay','Guatemala','Venezuela','Costa Rica'].indexOf(n.country)>-1;
+    });
+  } else {
+    items=NEWS.filter(function(n){
+      return ['España','Italia','Francia','Alemania','Portugal','Polonia','Belgica','Bélgica','Holanda','Países Bajos','Grecia','Rumania','Rumanía','Chequia','Eslovaquia','Suecia','Austria','Suiza','Turquia','Turquía','Reino Unido'].indexOf(n.country)>-1;
+    });
+  }
+
+  if(countEl) countEl.textContent=items.length+' noticias';
+
+  if(!items.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📰</div><p>Sin noticias para esta region.</p></div>';
+    return;
+  }
+
+  // Group by country
+  var byCountry={};
+  items.forEach(function(n){
+    if(!byCountry[n.country]) byCountry[n.country]=[];
+    byCountry[n.country].push(n);
+  });
+
+  // Sort countries by number of news desc
+  var countries=Object.keys(byCountry).sort(function(a,b){ return byCountry[b].length-byCountry[a].length; });
+
+  var html='';
+  countries.forEach(function(country){
+    var news=byCountry[country];
+    // Count critical
+    var critCount=news.filter(function(n){return n.severity==='critical';}).length;
+    var critBadge=critCount>0?(' <span style="font-size:10px;background:var(--sev-c-bg);color:var(--sev-c);border:1px solid var(--sev-c-bd);padding:1px 6px;border-radius:3px;font-weight:600;">'+critCount+' critico'+(critCount>1?'s':'')+'</span>'):'';
+    html+='<div style="margin-bottom:28px;">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd);">';
+    html+='<span style="font-size:14px;font-weight:600;color:var(--tx);">'+country+'</span>';
+    html+=critBadge;
+    html+='<span style="font-size:11px;color:var(--tx3);margin-left:auto;">'+news.length+' noticia'+(news.length>1?'s':'')+'</span>';
+    html+='</div>';
+    html+='<div class="news-grid">';
+    news.forEach(function(n){ html+=cardHTML(n); });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+function toggleTheme(){S.dark=!S.dark;S.dark?document.body.setAttribute('data-dark',''):document.body.removeAttribute('data-dark');localStorage.setItem('rl2_dark',S.dark?'1':'0');}
+async function fetchNews(){
+  var btn=document.getElementById('fetchBtn');
+  var icon=document.getElementById('fetchIcon');
+  var overlay=document.getElementById('fetchOverlay');
+  var msgEl=document.getElementById('fetchMsg');
+  btn.disabled=true; icon.textContent='⟳';
+  if(overlay) overlay.classList.add('on');
+  var msgs=['Consultando fuentes globales...','Buscando incidentes logisticos...','Analizando riesgos...','Clasificando criticidad...'];
+  var mi=0;
+  var iv=setInterval(function(){if(msgEl) msgEl.textContent=msgs[mi=(mi+1)%msgs.length];},1800);
+  var today=new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+  var dateStr=new Date().toISOString().slice(0,10);
+  var prompt='Hoy es '+today+'. Busca las 10 noticias mas importantes de HOY sobre robo de mercancias, siniestros de transporte, riesgos logisticos y seguros de carga. Devuelve SOLO este JSON array sin texto extra: [{"id":1,"title":"titular","summary":"resumen 2 frases","country":"pais","risk":"robo|accidente|climatico|fraude|regulatorio","transport":"maritimo|terrestre|aereo|ferroviario","sector":"sector","severity":"critical|high|medium|low","date":"'+dateStr+'","source":"fuente","impact":85,"tags":["tag1","tag2"]}] severity: critical=impacto>90, high=75-90, medium=50-74, low<50. SOLO el array JSON.';
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:4000,
+      system:'Eres analista de riesgos logisticos. Responde SOLO con JSON valido, sin texto extra ni markdown.',
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:prompt}]
+    })
+  }).then(function(res){
+    clearInterval(iv);
+    if(overlay) overlay.classList.remove('on');
+    btn.disabled=false; icon.textContent='↻';
+    if(!res.ok) throw new Error('API '+res.status);
+    return res.json();
+  }).then(function(data){
+    var txt=data.content.filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
+    var s=txt.trim();
+    var ticktick='```';
+    s=s.replace(ticktick+'json','').replace(new RegExp(ticktick,'g'),'').trim();
+    var a=s.indexOf('['), b=s.lastIndexOf(']');
+    if(a>=0&&b>=0) s=s.slice(a,b+1);
+    var items=JSON.parse(s);
+    if(Array.isArray(items)&&items.length){
+      NEWS.length=0;
+      items.forEach(function(n,i){n.id=i+1; NEWS.push(n);});
+      renderGrid(); updateCounts();
+      var lp=document.getElementById('livePill');
+      if(lp) lp.classList.add('on');
+      toast('Actualizadas '+items.length+' noticias en tiempo real');
+    }
+  }).catch(function(e){
+    clearInterval(iv);
+    if(overlay) overlay.classList.remove('on');
+    btn.disabled=false; icon.textContent='↻';
+    toast('Error: '+e.message.slice(0,60));
+  });
+}
+let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
